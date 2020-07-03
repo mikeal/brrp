@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import rollup from '@rollup/stream'
 import browserConfig from './browser.js'
+import nodejsConfig from './nodejs.js'
 import yargs from 'yargs'
 import { writeFileSync, unlinkSync, createWriteStream } from 'fs'
 import { promises as fs } from 'fs'
@@ -9,7 +10,8 @@ import { join } from 'path'
 import { execSync } from 'child_process'
 import rimraf from 'rimraf'
 
-const bundle = filename => rollup(browserConfig(filename))
+const bundleBrowser = opts => rollup(browserConfig(opts))
+const bundleNodejs = opts => rollup(nodejsConfig(opts))
 
 const parse = str => {
   if (str.includes('@', 1)) {
@@ -32,20 +34,22 @@ const install = async pkg => {
   execSync(`npm install ${full}`, { cwd: dir, stdio: [0, process.stderr, 'pipe'] })
   const filename = join(dir, `.brrp.${name}.cjs`)
   writeFileSync(filename, Buffer.from(proxyFile(name)))
-  const output = bundle(filename)
-  output.dir = dir
-  output.pkgjson = pkgjson
-  return output
+  return { input: filename, dir, pkgjson }
 }
 
 const runner = async argv => {
-  if (argv.install) return install(argv.pkg)
-  if (argv.input) return bundle(argv.input)
+  let bundle = argv.nodejs ? bundleNodejs : bundleBrowser
+  if (argv.p) bundle = opts => bundle({...opts, polyfill: true})
+  if (argv.install) {
+    const { input } = await install(argv.pkg)
+    return bundle({input})
+  }
+  if (argv.input) return bundle({input: argv.input})
   const build = proxyFile(argv.pkg)
   const filename = `.brrp.${argv.pkg}.cjs`
   writeFileSync(filename, Buffer.from(build))
   process.on('exit', () => unlinkSync(filename))
-  return bundle(filename)
+  return bundle({input: filename})
 }
 
 const run = async argv => {
@@ -74,7 +78,6 @@ const options = yargs => {
     alias: 'o',
     desc: 'Write output to file instead of stdout'
   })
-  // TODO
   yargs.option('nodejs', {
     alias: 'n',
     type: 'boolean',
@@ -93,4 +96,5 @@ const desc = 'Output bundle of npm package'
 const args = yargs.command('$0 [pkg]', desc, options, run).argv
 if (!args.pkg && !args.input) {
   yargs.showHelp()
+  process.exit()
 }

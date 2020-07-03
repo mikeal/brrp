@@ -7,7 +7,7 @@ const options = {
   preferBuiltins: true
 }
 
-export default (input, outputFile) => {
+export default ({input, outputFile}) => {
   return {
     input,
     output: {
