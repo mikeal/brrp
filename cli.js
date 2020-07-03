@@ -31,9 +31,21 @@ const options = yargs => {
     desc: 'Install the npm package locally before running'
   })
   // TODO
-  yargs.options('nodejs', {
+  yargs.option('nodejs', {
     alias: 'n',
+    type: 'boolean',
+    default: false,
     desc: 'Compile output file for Node.js instead of browser'
+  })
+  // TODO
+  yargs.option('output', {
+    alias: 'o',
+    desc: 'Write output to file instead of stdout'
+  })
+  // TODO
+  yargs.option('exports', {
+    alias: 'e',
+    desc: 'Write output to ./npm/pkg.v1.1.1.js and pkg.browser.v1.1.1.js and edit local package.json exports property for browser overwrite'
   })
 }
 
