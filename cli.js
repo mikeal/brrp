@@ -17,8 +17,8 @@ const run = async argv => {
   const build = `module.exports = require('${argv.pkg}')`
   const filename = `.brrp.${build}.cjs`
   writeFileSync(filename, Buffer.from(build))
+  process.on('exit', () => unlinkSync(filename))
   await bundle(filename)
-  unlinkSync(filename)
 }
 
 const options = yargs => {
