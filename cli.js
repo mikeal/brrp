@@ -37,14 +37,26 @@ const install = async pkg => {
   return { input: filename, dir, pkgjson }
 }
 
+const notfound = pkg => `No package named "${pkg}" installed locally.
+Use '--install' to pull the package from npm and bundle it.
+Use '--input' to compile a specific file instead of a package from npm`
+
 const runner = async argv => {
-  let bundle = argv.nodejs ? bundleNodejs : bundleBrowser
-  if (argv.p) bundle = opts => bundle({...opts, polyfill: true})
+  let _bundle = argv.nodejs ? bundleNodejs : bundleBrowser
+  let bundle
+  if (argv.p) bundle = opts => _bundle({...opts, nodePolyfills: true})
+  else bundle = _bundle
   if (argv.install) {
     const { input } = await install(argv.pkg)
     return bundle({input})
   }
   if (argv.input) return bundle({input: argv.input})
+  try {
+    await import(argv.pkg)
+  } catch (e) {
+    console.error(notfound(argv.pkg))
+    process.exit(1)
+  }
   const build = proxyFile(argv.pkg)
   const filename = `.brrp.${argv.pkg}.cjs`
   writeFileSync(filename, Buffer.from(build))
@@ -83,6 +95,12 @@ const options = yargs => {
     type: 'boolean',
     default: false,
     desc: 'Compile output file for Node.js instead of browser'
+  })
+  yargs.option('nodejs-polyfills', {
+    alias: 'p',
+    type: 'boolean',
+    default: false,
+    desc: 'Add nodejs polyfills'
   })
  // TODO
   yargs.option('exports', {

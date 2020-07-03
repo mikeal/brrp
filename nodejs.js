@@ -1,6 +1,5 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs'
-import nodePolyfills from 'rollup-plugin-node-polyfills'
 import shebangs from 'rollup-plugin-preserve-shebangs'
 import json from '@rollup/plugin-json'
 
@@ -10,14 +9,13 @@ const options = {
   preferBuiltins: true
 }
 
-export default ({input, outputFile, polyfills}) => {
+export default ({input, outputFile}) => {
   const plugins = [
     json(),
     shebangs.preserveShebangs(),
     resolve(options),
     commonjs({extensions: ['.js', '.cjs']})
   ]
-  if (polyfills) plugins.push(nodePolyfills())
   return {
     input,
     output: {
