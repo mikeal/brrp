@@ -1,0 +1,20 @@
+{
+  "name": "brrp",
+  "version": "0.0.0",
+  "description": "",
+  "main": "browser-config.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Mikeal Rogers <mikeal.rogers@gmail.com> (https://www.mikealrogers.com/)",
+  "license": "(Apache-2.0 AND MIT)",
+  "dependencies": {
+    "@rollup/plugin-commonjs": "^13.0.0",
+    "@rollup/plugin-node-resolve": "^8.1.0",
+    "@rollup/stream": "^1.0.0",
+    "rollup": "^2.18.2",
+    "yargs": "^15.4.0"
+  }
+}
