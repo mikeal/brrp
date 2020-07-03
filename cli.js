@@ -4,21 +4,58 @@ import browserConfig from './browser.js'
 import yargs from 'yargs'
 import { writeFileSync, unlinkSync } from 'fs'
 import { promises as fs } from 'fs'
+import tempy from 'tempy'
+import { join } from 'path'
+import { execSync } from 'child_process'
+import rimraf from 'rimraf'
 
 const bundle = async filename => {
   const stream = rollup(browserConfig(filename))
   for await (const chunk of stream) {
     process.stdout.write(chunk)
   }
+  return stream
 }
 
-const run = async argv => {
+const parse = str => {
+  if (str.includes('@', 1)) {
+    const name = str.slice(0, str.indexOf('@', 1))
+    const version = str.slice(str.indexOf('@') + 1)
+    const full = str
+    return { name, version, full }
+  }
+  return { full: str, name: str }
+}
+
+const proxyFile = pkg => `module.exports = require('${pkg}')`
+
+const install = async pkg => {
+  const dir = await tempy.directory()
+  process.on('exit', () => rimraf.sync(dir))
+  const pkgjson = join(dir, 'package.json')
+  writeFileSync(pkgjson, Buffer.from(JSON.stringify({ name: 'build' })))
+  const { name, full } = parse(pkg)
+  execSync(`npm install ${full}`, { cwd: dir, stdio: [0, process.stderr, 'pipe'] })
+  const filename = join(dir, `.brrp.${name}.cjs`)
+  writeFileSync(filename, Buffer.from(proxyFile(name)))
+  const output = bundle(filename)
+  output.dir = dir
+  output.pkgjson = pkgjson
+  return output
+}
+
+const runner = async argv => {
+  if (argv.install) return install(argv.pkg)
   if (argv.input) return bundle(argv.input)
-  const build = `module.exports = require('${argv.pkg}')`
+  const build = proxyFile(argv.pkg)
   const filename = `.brrp.${build}.cjs`
   writeFileSync(filename, Buffer.from(build))
   process.on('exit', () => unlinkSync(filename))
-  await bundle(filename)
+  return bundle(filename)
+}
+
+const run = async argv => {
+  const bundler = runner(argv)
 }
 
 const options = yargs => {
@@ -26,9 +63,11 @@ const options = yargs => {
     alias: 'i',
     desc: 'Compile input file instead of npm package'
   })
-  // TODO
   yargs.option('install', {
-    desc: 'Install the npm package locally before running'
+    desc: 'Install the npm package locally before running',
+    alias: 'x',
+    type: 'boolean',
+    default: false
   })
   // TODO
   yargs.option('nodejs', {
