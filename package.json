@@ -5,6 +5,7 @@
   "main": "src/index.js",
   "exports": "src/index.js",
   "type": "module",
+  "bin": { "brrp": "./cli.js" },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
