@@ -34,12 +34,59 @@ const install = async pkg => {
   execSync(`npm install ${full}`, { cwd: dir, stdio: [0, process.stderr, 'pipe'] })
   const filename = join(dir, `.brrp.${name}.cjs`)
   writeFileSync(filename, Buffer.from(proxyFile(name)))
-  return { input: filename, dir, pkgjson }
+  return { input: filename, dir, pkgjson, name, full }
 }
 
 const notfound = pkg => `No package named "${pkg}" installed locally.
 Use '--install' to pull the package from npm and bundle it.
 Use '--input' to compile a specific file instead of a package from npm`
+
+const writeStream = async (stream, filename) => {
+  const writable = createWriteStream(filename)
+  for await (const chunk of stream) {
+    writable.write(chunk)
+  }
+  writable.end()
+  console.log('compiled', filename)
+}
+
+const mkdirIfMissing = async dir => {
+  try {
+    await fs.mkdir(dir)
+  } catch (e) {
+    if (e.errno !== -17) throw e
+  }
+}
+
+const loadJSON = async f => JSON.parse((await fs.readFile(f)).toString())
+
+const exporter = async argv => {
+  const dir = join(process.cwd(), 'npm')
+  await mkdirIfMissing(dir)
+  const { input, pkgjson, name } = await install(argv.pkg)
+  const nodejs = bundleNodejs({input})
+  const browser = bundleBrowser({input})
+  const pkg = await loadJSON(pkgjson)
+  const version = pkg.dependencies[name].slice(1)
+  const nodejsFilename = `${name}-${version}.nodejs.js`
+  const browserFilename = `${name}-${version}.browser.js`
+  await Promise.all([
+    writeStream(nodejs, join(dir, nodejsFilename)),
+    writeStream(browser, join(dir, browserFilename))
+  ])
+  const mypkgjson = join(process.cwd(), 'package.json')
+  const mypkg = await loadJSON(mypkgjson)
+  if (!mypkg.exports) {
+    mypkg.exports = {}
+  }
+  const ex = {
+    node: nodejsFilename,
+    browser: browserFilename
+  }
+  mypkg.exports[nodejsFilename] = ex
+  writeFileSync(mypkgjson, Buffer.from(JSON.stringify(mypkg, null, 2)))
+  console.log('appended export map', ex)
+}
 
 const runner = async argv => {
   let _bundle = argv.nodejs ? bundleNodejs : bundleBrowser
@@ -65,6 +112,7 @@ const runner = async argv => {
 }
 
 const run = async argv => {
+  if (argv.exports) return exporter(argv)
   const bundler = await runner(argv)
   let f
   if (argv.output) f = createWriteStream(argv.output)
@@ -102,9 +150,10 @@ const options = yargs => {
     default: false,
     desc: 'Add nodejs polyfills'
   })
- // TODO
   yargs.option('exports', {
     alias: 'e',
+    type: 'boolean',
+    default: false,
     desc: 'Write output to ./npm/pkg.v1.1.1.js and pkg.browser.v1.1.1.js and edit local package.json exports property for browser overwrite'
   })
 }
