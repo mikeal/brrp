@@ -34,3 +34,27 @@ for await (const chunk of stream) {
   process.stdout.write(chunk)
 }
 ```
+
+## Inject Node.js polyfills
+
+By default we don't bundle in any Node.js polyfills. You can include them
+by using the `-p` or `--node-polyfills` option.
+
+```
+$ brrp -x -p base-x
+```
+
+Or, if you're using `brrp` as a module.
+
+```js
+import { install, browserBundle } from 'brrp'
+
+const { input } = await install('lodash.merge')
+const nodePolyfills = true
+const stream = browserBundle({input, nodePolyfills})
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk)
+}
+```
+

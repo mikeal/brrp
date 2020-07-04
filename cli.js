@@ -113,7 +113,7 @@ const options = yargs => {
     default: false,
     desc: 'Compile output file for Node.js instead of browser'
   })
-  yargs.option('nodejs-polyfills', {
+  yargs.option('node-polyfills', {
     alias: 'p',
     type: 'boolean',
     default: false,
