@@ -1,6 +1,6 @@
 # brrp
 
-Creates ES bundles of npm packages for use in the browser or Node.js.
+Creates ESM bundles of npm packages for use in the browser or Node.js.
 
 # Usage
 
