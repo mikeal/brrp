@@ -2,12 +2,16 @@
   "name": "brrp",
   "version": "0.0.0-dev",
   "description": "ESM bundle npm modules for browsers and nodejs",
-  "main": "src/index.js",
-  "exports": "src/index.js",
+  "main": "./src/index.js",
+  "exports": "./src/index.js",
   "type": "module",
-  "bin": { "brrp": "./cli.js" },
+  "bin": {
+    "brrp": "./cli.js"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "standard",
+    "test": "hundreds mocha test/test-*.js",
+    "coverage": "c8 --reporter=html mocha test/test-*.js && npx st -d coverage -p 8080"
   },
   "keywords": [],
   "author": "Mikeal Rogers <mikeal.rogers@gmail.com> (https://www.mikealrogers.com/)",
@@ -24,5 +28,9 @@
     "standard": "^14.3.4",
     "tempy": "^0.5.0",
     "yargs": "^15.4.0"
+  },
+  "devDependencies": {
+    "hundreds": "0.0.7",
+    "mocha": "^8.0.1"
   }
 }
