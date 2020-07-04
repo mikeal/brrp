@@ -1,41 +1,10 @@
 #!/usr/bin/env node
-import rollup from '@rollup/stream'
-import browserConfig from './browser.js'
-import nodejsConfig from './nodejs.js'
 import yargs from 'yargs'
-import { writeFileSync, unlinkSync, createWriteStream } from 'fs'
-import { promises as fs } from 'fs'
-import tempy from 'tempy'
+import { writeFileSync, unlinkSync, createWriteStream, promises as fs } from 'fs'
+
 import { join } from 'path'
-import { execSync } from 'child_process'
-import rimraf from 'rimraf'
 
-const bundleBrowser = opts => rollup(browserConfig(opts))
-const bundleNodejs = opts => rollup(nodejsConfig(opts))
-
-const parse = str => {
-  if (str.includes('@', 1)) {
-    const name = str.slice(0, str.indexOf('@', 1))
-    const version = str.slice(str.indexOf('@') + 1)
-    const full = str
-    return { name, version, full }
-  }
-  return { full: str, name: str }
-}
-
-const proxyFile = pkg => `module.exports = require('${pkg}')`
-
-const install = async pkg => {
-  const dir = await tempy.directory()
-  process.on('exit', () => rimraf.sync(dir))
-  const pkgjson = join(dir, 'package.json')
-  writeFileSync(pkgjson, Buffer.from(JSON.stringify({ name: 'build' })))
-  const { name, full } = parse(pkg)
-  execSync(`npm install ${full}`, { cwd: dir, stdio: [0, process.stderr, 'pipe'] })
-  const filename = join(dir, `.brrp.${name}.cjs`)
-  writeFileSync(filename, Buffer.from(proxyFile(name)))
-  return { input: filename, dir, pkgjson, name, full }
-}
+import { install, bundleBrowser, bundleNodejs, proxyFile } from './src/index.js'
 
 const notfound = pkg => `No package named "${pkg}" installed locally.
 Use '--install' to pull the package from npm and bundle it.
@@ -64,8 +33,8 @@ const exporter = async argv => {
   const dir = join(process.cwd(), 'npm')
   await mkdirIfMissing(dir)
   const { input, pkgjson, name } = await install(argv.pkg)
-  const nodejs = bundleNodejs({input})
-  const browser = bundleBrowser({input})
+  const nodejs = bundleNodejs({ input })
+  const browser = bundleBrowser({ input })
   const pkg = await loadJSON(pkgjson)
   const version = pkg.dependencies[name].slice(1)
   const nodejsFilename = `${name}-${version}.nodejs.js`
@@ -89,15 +58,15 @@ const exporter = async argv => {
 }
 
 const runner = async argv => {
-  let _bundle = argv.nodejs ? bundleNodejs : bundleBrowser
+  const _bundle = argv.nodejs ? bundleNodejs : bundleBrowser
   let bundle
-  if (argv.p) bundle = opts => _bundle({...opts, nodePolyfills: true})
+  if (argv.p) bundle = opts => _bundle({ ...opts, nodePolyfills: true })
   else bundle = _bundle
   if (argv.install) {
     const { input } = await install(argv.pkg)
-    return bundle({input})
+    return bundle({ input })
   }
-  if (argv.input) return bundle({input: argv.input})
+  if (argv.input) return bundle({ input: argv.input })
   try {
     await import(argv.pkg)
   } catch (e) {
@@ -108,7 +77,7 @@ const runner = async argv => {
   const filename = `.brrp.${argv.pkg}.cjs`
   writeFileSync(filename, Buffer.from(build))
   process.on('exit', () => unlinkSync(filename))
-  return bundle({input: filename})
+  return bundle({ input: filename })
 }
 
 const run = async argv => {
