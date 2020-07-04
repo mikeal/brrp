@@ -10,7 +10,7 @@ Creates ES bundles of npm packages for use in the browser or Node.js.
 $ brrp -x lodash.merge > lodash-merge.bundle.js
 ```
 
-This will do a fresh install of the npm module `buffer` in temporary
+This will do a fresh install of the npm module `lodash.merge` in temporary
 directory and then create a bundle of the module.
 
 If you have the target module already installed in your local npm project
