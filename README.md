@@ -57,4 +57,26 @@ for await (const chunk of stream) {
   process.stdout.write(chunk)
 }
 ```
+## Minification
+
+```
+$ brrp -x -m bent
+```
+
+Or, if you're using `brrp` as a module.
+
+```js
+import { install, browserBundle } from 'brrp'
+
+const { input } = await install('bent')
+const minify = true
+const stream = browserBundle({input, minify})
+
+for await (const chunk of stream) {
+  process.stdout.write(chunk)
+}
+```
+
+We use [`terser`](https://github.com/terser/terser) under the hood
+for optimal compression targetted at ES6+.
 

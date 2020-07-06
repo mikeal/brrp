@@ -58,15 +58,15 @@ const exporter = async argv => {
 }
 
 const runner = async argv => {
-  const _bundle = argv.nodejs ? bundleNodejs : bundleBrowser
-  let bundle
-  if (argv.p) bundle = opts => _bundle({ ...opts, nodePolyfills: true })
-  else bundle = _bundle
+  const bundle = argv.nodejs ? bundleNodejs : bundleBrowser
+  const opts = { }
+  if (argv.p) opts.nodePolyfills = true
+  if (argv.m) opts.minify = true
   if (argv.install) {
     const { input } = await install(argv.pkg)
-    return bundle({ input })
+    return bundle({ input, ...opts })
   }
-  if (argv.input) return bundle({ input: argv.input })
+  if (argv.input) return bundle({ input: argv.input, ...opts })
   try {
     await import(argv.pkg)
   } catch (e) {
@@ -77,7 +77,7 @@ const runner = async argv => {
   const filename = `.brrp.${argv.pkg}.cjs`
   writeFileSync(filename, Buffer.from(build))
   process.on('exit', () => unlinkSync(filename))
-  return bundle({ input: filename })
+  return bundle({ input: filename, ...opts })
 }
 
 const run = async argv => {
@@ -118,6 +118,12 @@ const options = yargs => {
     type: 'boolean',
     default: false,
     desc: 'Add nodejs polyfills'
+  })
+  yargs.option('minify', {
+    alias: 'm',
+    type: 'boolean',
+    default: false,
+    desc: 'Minify bundle'
   })
   yargs.option('exports', {
     alias: 'e',
