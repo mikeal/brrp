@@ -1,7 +1,7 @@
 import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 import nodejsPolyfills from 'rollup-plugin-node-polyfills'
-import { terser } from "rollup-plugin-terser";
+import { terser } from 'rollup-plugin-terser'
 
 const options = {
   mainFields: ['browser:module', 'module', 'browser', 'main'],
