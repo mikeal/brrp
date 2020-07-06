@@ -5,6 +5,7 @@ import * as brrp from 'brrp'
 const test = it
 const same = assert.deepStrictEqual
 const timeout = 60 * 1000
+const minify = true
 
 test('install', async () => {
   const result = await brrp.install('bent')
@@ -33,6 +34,9 @@ test('install version', async () => {
   same(b1 !== b2, true)
   same(b1.includes('btoa'), true)
   same(b2.includes('btoa'), false)
+  const min = await bundle(brrp.bundleBrowser, 'bent', { minify })
+  same(min !== b1, true)
+  same(min.length < b1.length, true)
 }).timeout(timeout)
 
 test('nodejs polyfills', async () => {
@@ -50,4 +54,7 @@ test('nodejs bundle', async () => {
   const str = await bundle(brrp.bundleNodejs, 'bent')
   same(str.includes("from 'http'"), true)
   same(str.includes('fetch'), false)
+  const min = await bundle(brrp.bundleNodejs, 'bent', { minify })
+  same(min !== str, true)
+  same(min.length < str.length, true)
 }).timeout(timeout)

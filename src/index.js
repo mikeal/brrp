@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import rollup from '@rollup/stream'
+import rollup from './rollup-iter.js'
 import browserConfig from './browser.js'
 import nodejsConfig from './nodejs.js'
 import { writeFileSync } from 'fs'
