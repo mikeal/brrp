@@ -10,7 +10,7 @@
   },
   "scripts": {
     "lint": "standard",
-    "test:v12": "mocha test/test-*.js",
+    "test:node-v12": "mocha test/test-*.js",
     "test": "npm run lint && hundreds mocha test/test-*.js",
     "coverage": "c8 --reporter=html mocha test/test-*.js && npx st -d coverage -p 8080"
   },
