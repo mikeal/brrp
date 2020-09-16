@@ -13,6 +13,9 @@ const bundleBrowser = opts => rollup(browserConfig(opts))
 const bundleNodejs = opts => rollup(nodejsConfig(opts))
 
 const parse = str => {
+  if (str.startsWith('@')) {
+    str = str.slice(str.indexOf('/') + 1)
+  }
   if (str.includes('@', 1)) {
     const name = str.slice(0, str.indexOf('@', 1))
     const version = str.slice(str.indexOf('@') + 1)

@@ -58,3 +58,8 @@ test('nodejs bundle', async () => {
   same(min !== str, true)
   same(min.length < str.length, true)
 }).timeout(timeout)
+
+test('scoped package', async () => {
+  const str = await bundle(brrp.bundleBrowser, '@multiformats/base-x')
+  same(str.length > 0, true)
+}).timeout(timeout)
