@@ -13,9 +13,6 @@ const bundleBrowser = opts => rollup(browserConfig(opts))
 const bundleNodejs = opts => rollup(nodejsConfig(opts))
 
 const parse = str => {
-  if (str.startsWith('@')) {
-    str = str.slice(str.indexOf('/') + 1)
-  }
   if (str.includes('@', 1)) {
     const name = str.slice(0, str.indexOf('@', 1))
     const version = str.slice(str.indexOf('@') + 1)
@@ -34,9 +31,11 @@ const install = async pkg => {
   writeFileSync(pkgjson, Buffer.from(JSON.stringify({ name: 'build' })))
   const { name, full } = parse(pkg)
   execSync(`npm install ${full}`, { cwd: dir, stdio: [0, process.stderr, 'pipe'] })
-  const filename = join(dir, `.brrp.${name}.cjs`)
+  const filename = join(dir, `.brrp.${escapePkgName(name)}.cjs`)
   writeFileSync(filename, Buffer.from(proxyFile(name)))
   return { input: filename, dir, pkgjson, name, full }
 }
+
+const escapePkgName = name => name.replace(/\//, '.scope.')
 
 export { install, bundleBrowser, bundleNodejs, parse, proxyFile }
