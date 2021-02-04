@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
 import { writeFileSync, unlinkSync, createWriteStream, promises as fs } from 'fs'
-
 import { join } from 'path'
-
 import { install, bundleBrowser, bundleNodejs, proxyFile } from './src/index.js'
 
 const notfound = pkg => `No package named "${pkg}" installed locally.
@@ -135,8 +134,10 @@ const options = yargs => {
 
 const desc = 'Output bundle of npm package'
 
-const args = yargs.command('$0 [pkg]', desc, options, run).argv
+const y = yargs(hideBin(process.argv))
+
+const args = y.command('$0 [pkg]', desc, options, run).argv
 if (!args.pkg && !args.input) {
-  yargs.showHelp()
+  y.showHelp()
   process.exit()
 }
